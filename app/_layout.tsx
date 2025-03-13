@@ -29,8 +29,18 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
+      <Stack screenOptions={{
+        headerShown: false,
+        animation: 'slide_from_right',
+      }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="login"
+          options={({ route }) => ({
+            animation: route.params?.animation || 'slide_from_right'
+          })}
+        />
+        <Stack.Screen name="register" />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
