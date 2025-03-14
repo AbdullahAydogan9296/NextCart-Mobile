@@ -1,11 +1,10 @@
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
-
-const { width } = Dimensions.get('window');
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 
 export default function Shop() {
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Shop</Text>
+            <Text style={styles.text}>Shop Page</Text>
         </View>
     );
 }
@@ -13,12 +12,13 @@ export default function Shop() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
         backgroundColor: '#fff',
-        padding: width * 0.05,
     },
-    title: {
-        fontSize: width * 0.06,
-        fontWeight: 'bold',
+    text: {
+        fontSize: 24,
+        fontWeight: '600',
         color: '#111827',
     },
 }); 

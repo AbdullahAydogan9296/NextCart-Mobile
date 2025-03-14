@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, Alert } from 'react-native';
-import { Link, router } from 'expo-router';
+import { Link, router, Stack } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { useAuth } from '@/hooks/useAuth';
 import { ROUTES } from './routes';
+import AuthHeader from './components/AuthHeader';
 
 export default function LoginScreen() {
     const [email, setEmail] = useState('');
@@ -36,6 +37,11 @@ export default function LoginScreen() {
 
     return (
         <View style={[styles.container, { backgroundColor }]}>
+            <Stack.Screen
+                options={{
+                    header: () => <AuthHeader />,
+                }}
+            />
             <View style={styles.content}>
                 <ThemedText style={styles.title}>Login</ThemedText>
 

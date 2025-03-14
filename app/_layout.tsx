@@ -1,101 +1,131 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Drawer } from 'expo-router/drawer';
-import { View, TouchableOpacity, Image, TextInput, StyleSheet, Text } from 'react-native';
+import { View, StyleSheet, Text, Modal, TouchableOpacity } from 'react-native';
 import { DrawerContentScrollView, DrawerItem, DrawerContentComponentProps } from '@react-navigation/drawer';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
+import ShopHeader from './components/ShopHeader';
+import GeneralHeader from './components/GeneralHeader';
+import AuthHeader from './components/AuthHeader';
 
-// Import SVG icons
-import MenuIcon from '../assets/images/menu.svg';
+type AppRoute =
+  | '/home'
+  | '/shop'
+  | '/mens-fashion'
+  | '/womens-fashion'
+  | '/electronics'
+  | '/cosmetics'
+  | '/profile'
+  | '/orders'
+  | '/favorites'
+  | '/privacy'
+  | '/terms'
+  | '/faq'
+  | '/login'
+  | '/register';
 
 interface DrawerItem {
   name: string;
   label: string;
+  route: AppRoute;
 }
 
 function CustomDrawerContent(props: DrawerContentComponentProps) {
+  const [modalVisible, setModalVisible] = useState(false);
+  const router = useRouter();
+
+  const handleSignOut = () => {
+    setModalVisible(false);
+    router.push('/login' as AppRoute);
+  };
+
   const renderSection = (title: string, items: DrawerItem[]) => (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <Text style={[styles.sectionTitle, { color: '#fff' }]}>{title}</Text>
       {items.map((item) => (
         <DrawerItem
           key={item.name}
           label={item.label}
-          onPress={() => props.navigation.navigate(item.name)}
-          labelStyle={styles.drawerLabel}
+          onPress={() => {
+            if (item.label === 'Sign Out') {
+              setModalVisible(true);
+            } else {
+              router.push(item.route);
+            }
+          }}
+          labelStyle={[
+            styles.drawerLabel,
+            item.label === 'Sign Out' && { color: '#ff4444' }
+          ]}
         />
       ))}
+      <View style={styles.separator} />
     </View>
   );
 
   return (
-    <DrawerContentScrollView {...props}>
+    <DrawerContentScrollView {...props} style={styles.drawer}>
       <DrawerItem
         label="Home"
-        onPress={() => props.navigation.navigate('home')}
-        labelStyle={styles.drawerLabel}
+        onPress={() => router.push('/home' as AppRoute)}
+        labelStyle={[styles.drawerLabel, { color: '#fff' }]}
       />
 
       {renderSection('Categories', [
-        { name: 'mens-fashion', label: "Men's Fashion" },
-        { name: 'womens-fashion', label: "Women's Fashion" },
-        { name: 'electronics', label: 'Electronics' },
-        { name: 'cosmetics', label: 'Cosmetics' },
+        { name: 'mens-fashion', label: "Men's Fashion", route: '/mens-fashion' },
+        { name: 'womens-fashion', label: "Women's Fashion", route: '/womens-fashion' },
+        { name: 'electronics', label: 'Electronics', route: '/electronics' },
+        { name: 'cosmetics', label: 'Cosmetics', route: '/cosmetics' },
       ])}
 
       {renderSection('Account', [
-        { name: 'profile', label: 'My Profile' },
-        { name: 'orders', label: 'My Orders' },
-        { name: 'favorites', label: 'My Favorites' },
-        { name: 'signout', label: 'Sign Out' },
+        { name: 'profile', label: 'My Profile', route: '/profile' },
+        { name: 'orders', label: 'My Orders', route: '/orders' },
+        { name: 'favorites', label: 'My Favorites', route: '/favorites' },
+        { name: 'signout', label: 'Sign Out', route: '/login' },
       ])}
 
       {renderSection('Legal & Support', [
-        { name: 'privacy', label: 'Privacy Policy' },
-        { name: 'terms', label: 'Terms of Service' },
-        { name: 'faq', label: 'FAQ' },
+        { name: 'privacy', label: 'Privacy Policy', route: '/privacy' },
+        { name: 'terms', label: 'Terms of Service', route: '/terms' },
+        { name: 'faq', label: 'FAQ', route: '/faq' },
       ])}
+
+      <Modal
+        transparent={true}
+        visible={modalVisible}
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Çıkış Yap</Text>
+            <Text style={styles.modalText}>Çıkış yapmak istediğinize emin misiniz?</Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.noButton]}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.noButtonText}>Hayır</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.yesButton]}
+                onPress={handleSignOut}
+              >
+                <Text style={styles.yesButtonText}>Evet</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </DrawerContentScrollView>
   );
 }
 
-function ShopHeader() {
-  return (
-    <SafeAreaView style={{ backgroundColor: '#111827' }}>
-      <View style={styles.headerContainer}>
-        <TouchableOpacity style={styles.headerButton}>
-          <Image
-            source={require('../assets/images/logo.png')}
-            style={{ width: 28, height: 28, resizeMode: 'contain' }}
-          />
-        </TouchableOpacity>
-        <View style={styles.searchContainer}>
-          <View style={[styles.searchBox, { height: 40 }]}>
-            <Image
-              source={require('../assets/images/search.png')}
-              style={[styles.searchIcon, { tintColor: '#6B7280' }]}
-            />
-            <TextInput
-              placeholder="Search in products..."
-              style={[styles.searchInput, { color: '#6B7280', fontSize: 14 }]}
-              placeholderTextColor="#6B7280"
-            />
-          </View>
-        </View>
-        <TouchableOpacity style={styles.headerButton}>
-          <MenuIcon width="28" height="28" color="#fff" />
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
-  );
-}
-
-export default function Layout() {
-  // Helper function to determine if a screen is a shop page
+export default function RootLayout() {
   const isShopPage = (screenName: string) => {
     return ['home', 'shop', 'mens-fashion', 'womens-fashion', 'electronics', 'cosmetics'].includes(screenName);
   };
 
-  // Helper function to determine if a screen is an auth page
   const isAuthPage = (screenName: string) => {
     return ['login', 'register'].includes(screenName);
   };
@@ -117,186 +147,39 @@ export default function Layout() {
         headerTitleStyle: {
           fontWeight: '500',
         },
-        // Auth pages (Login/Register) - Empty header
-        ...(isAuthPage(route.name) && {
-          headerTitle: '',
-          headerLeft: () => null,
-          headerRight: () => null,
-          drawerItemStyle: { display: 'none' },
-        }),
-        // Shop pages - Logo, Search bar, and Hamburger menu
-        ...(isShopPage(route.name) && {
-          header: () => <ShopHeader />,
-          headerStyle: {
-            backgroundColor: '#111827',
-            height: 0, // Remove default header height
-          },
-          headerShadowVisible: false,
-        }),
-        // Other pages - Logo and Hamburger menu
-        ...(!isAuthPage(route.name) && !isShopPage(route.name) && {
-          headerLeft: () => (
-            <TouchableOpacity style={[styles.headerButton, { marginLeft: 16 }]}>
-              <Image
-                source={require('../assets/images/logo.png')}
-                style={{ width: 28, height: 28, resizeMode: 'contain' }}
-              />
-            </TouchableOpacity>
-          ),
-          headerTitle: () => null,
-          headerRight: () => (
-            <TouchableOpacity style={[styles.headerButton, { marginRight: 16 }]}>
-              <MenuIcon width="28" height="28" color="#fff" />
-            </TouchableOpacity>
-          ),
-        }),
+        drawerPosition: 'right',
+        header: () => {
+          if (isAuthPage(route.name)) {
+            return <AuthHeader />;
+          }
+          return isShopPage(route.name) ? <ShopHeader /> : <GeneralHeader />;
+        },
+        drawerEnabled: !isAuthPage(route.name),
+        swipeEnabled: !isAuthPage(route.name),
       })}
+      initialRouteName="login"
     >
-      <Drawer.Screen
-        name="home"
-        options={{
-          title: 'Home',
-          drawerLabel: 'Home',
-        }}
-      />
-      <Drawer.Screen
-        name="shop"
-        options={{
-          title: 'Shop',
-          drawerLabel: 'Shop',
-        }}
-      />
-      <Drawer.Screen
-        name="mens-fashion"
-        options={{
-          title: "Men's Fashion",
-          drawerLabel: "Men's Fashion",
-        }}
-      />
-      <Drawer.Screen
-        name="womens-fashion"
-        options={{
-          title: "Women's Fashion",
-          drawerLabel: "Women's Fashion",
-        }}
-      />
-      <Drawer.Screen
-        name="electronics"
-        options={{
-          title: 'Electronics',
-          drawerLabel: 'Electronics',
-        }}
-      />
-      <Drawer.Screen
-        name="cosmetics"
-        options={{
-          title: 'Cosmetics',
-          drawerLabel: 'Cosmetics',
-        }}
-      />
-      <Drawer.Screen
-        name="profile"
-        options={{
-          title: 'My Profile',
-          drawerLabel: 'My Profile',
-        }}
-      />
-      <Drawer.Screen
-        name="orders"
-        options={{
-          title: 'My Orders',
-          drawerLabel: 'My Orders',
-        }}
-      />
-      <Drawer.Screen
-        name="favorites"
-        options={{
-          title: 'My Favorites',
-          drawerLabel: 'My Favorites',
-        }}
-      />
-      <Drawer.Screen
-        name="signout"
-        options={{
-          title: 'Sign Out',
-          drawerLabel: 'Sign Out',
-        }}
-      />
-      <Drawer.Screen
-        name="privacy"
-        options={{
-          title: 'Privacy Policy',
-          drawerLabel: 'Privacy Policy',
-        }}
-      />
-      <Drawer.Screen
-        name="terms"
-        options={{
-          title: 'Terms of Service',
-          drawerLabel: 'Terms of Service',
-        }}
-      />
-      <Drawer.Screen
-        name="faq"
-        options={{
-          title: 'FAQ',
-          drawerLabel: 'FAQ',
-        }}
-      />
-      <Drawer.Screen
-        name="login"
-        options={{
-          title: 'Login',
-          drawerLabel: 'Login',
-        }}
-      />
-      <Drawer.Screen
-        name="register"
-        options={{
-          title: 'Register',
-          drawerLabel: 'Register',
-        }}
-      />
+      <Drawer.Screen name="home" options={{ title: 'Home' }} />
+      <Drawer.Screen name="shop" options={{ title: 'Shop' }} />
+      <Drawer.Screen name="mens-fashion" options={{ title: "Men's Fashion" }} />
+      <Drawer.Screen name="womens-fashion" options={{ title: "Women's Fashion" }} />
+      <Drawer.Screen name="electronics" options={{ title: 'Electronics' }} />
+      <Drawer.Screen name="cosmetics" options={{ title: 'Cosmetics' }} />
+      <Drawer.Screen name="profile" options={{ title: 'My Profile' }} />
+      <Drawer.Screen name="orders" options={{ title: 'My Orders' }} />
+      <Drawer.Screen name="favorites" options={{ title: 'My Favorites' }} />
+      <Drawer.Screen name="privacy" options={{ title: 'Privacy Policy' }} />
+      <Drawer.Screen name="terms" options={{ title: 'Terms of Service' }} />
+      <Drawer.Screen name="faq" options={{ title: 'FAQ' }} />
+      <Drawer.Screen name="login" options={{ title: 'Login' }} />
+      <Drawer.Screen name="register" options={{ title: 'Register' }} />
     </Drawer>
   );
 }
 
 const styles = StyleSheet.create({
-  headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  drawer: {
     backgroundColor: '#111827',
-    height: 56,
-    paddingHorizontal: 8,
-  },
-  searchContainer: {
-    flex: 1,
-    paddingHorizontal: 12,
-  },
-  headerButton: {
-    padding: 8,
-  },
-  logo: {
-    width: 40,
-    height: 40,
-    resizeMode: 'contain',
-  },
-  searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F3F4F6',
-    borderRadius: 100,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  searchIcon: {
-    width: 20,
-    height: 20,
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    padding: 0,
   },
   section: {
     marginTop: 16,
@@ -304,12 +187,69 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
     paddingHorizontal: 16,
     marginBottom: 8,
+    color: '#fff',
   },
   drawerLabel: {
     fontSize: 14,
-    color: '#000',
+    color: '#fff',
+  },
+  separator: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    marginVertical: 8,
+    marginHorizontal: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 24,
+    width: '80%',
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 12,
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 24,
+    textAlign: 'center',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginHorizontal: 8,
+    alignItems: 'center',
+  },
+  noButton: {
+    backgroundColor: '#e8f5e9',
+  },
+  yesButton: {
+    backgroundColor: '#ffebee',
+  },
+  noButtonText: {
+    color: '#2e7d32',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  yesButtonText: {
+    color: '#c62828',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

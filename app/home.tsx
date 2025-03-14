@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, Image, ScrollView, TextInput, TouchableOpacity, Dimensions, SafeAreaView, ActivityIndicator } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import PaginationDots from './components/PaginationDots';
 import {
@@ -22,9 +22,36 @@ import RefundIcon from '../assets/images/refund.svg';
 import { Product } from './types/product';
 import { api } from './services/api';
 
+// Import ShopHeader component
+import ShopHeader from './components/ShopHeader';
+
 const { width } = Dimensions.get('window');
 
+type AppRoute =
+    | '/home'
+    | '/shop'
+    | '/mens-fashion'
+    | '/womens-fashion'
+    | '/electronics'
+    | '/cosmetics'
+    | '/profile'
+    | '/orders'
+    | '/favorites'
+    | '/privacy'
+    | '/terms'
+    | '/faq'
+    | '/login'
+    | '/register';
+
+interface Category {
+    title: string;
+    price: string;
+    color: string;
+    route: '/mens-fashion' | '/womens-fashion' | '/electronics' | '/cosmetics';
+}
+
 export default function Home() {
+    const router = useRouter();
     const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
     const [bestSellers, setBestSellers] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
@@ -63,11 +90,11 @@ export default function Home() {
         return <ActivityIndicator size="large" color="#111827" />;
     }
 
-    const categories = [
-        { title: "For Men's", price: "Starting at $24", color: '#E3F2FF' },
-        { title: "Women's Fashion", price: "Starting at $24", color: '#FFE8F7' },
-        { title: "Electronics", price: "Starting at $24", color: '#FFF3E5' },
-        { title: "Cosmetics", price: "Starting at $24", color: '#E5FFE8' },
+    const categories: Category[] = [
+        { title: "For Men's", price: "Starting at $24", color: '#E3F2FF', route: '/mens-fashion' },
+        { title: "Women's Fashion", price: "Starting at $24", color: '#FFE8F7', route: '/womens-fashion' },
+        { title: "Electronics", price: "Starting at $24", color: '#FFF3E5', route: '/electronics' },
+        { title: "Cosmetics", price: "Starting at $24", color: '#E5FFE8', route: '/cosmetics' },
     ];
 
     const handleScroll = (event: any, setter: (index: number) => void, itemWidth: number) => {
@@ -96,13 +123,17 @@ export default function Home() {
         </TouchableOpacity>
     );
 
+    const handleCategoryPress = (route: AppRoute) => {
+        router.push(route);
+    };
+
     return (
         <SafeAreaView style={styles.safeArea}>
             <ScrollView style={styles.container}>
                 <StatusBar style="light" />
                 <Stack.Screen
                     options={{
-                        headerShown: true,
+                        header: () => <ShopHeader />,
                     }}
                 />
 
@@ -110,7 +141,10 @@ export default function Home() {
                 <View style={styles.heroSection}>
                     <Text style={styles.heroPrice}>Starting from $49.99</Text>
                     <Text style={styles.heroTitle}>Exclusive collection{'\n'}for everyone</Text>
-                    <TouchableOpacity style={styles.exploreButton}>
+                    <TouchableOpacity
+                        style={styles.exploreButton}
+                        onPress={() => router.push('/shop' as AppRoute)}
+                    >
                         <Text style={styles.exploreButtonText}>Explore now</Text>
                     </TouchableOpacity>
                 </View>
@@ -160,6 +194,7 @@ export default function Home() {
                                         styles.categoryCard,
                                         { backgroundColor: category.color }
                                     ]}
+                                    onPress={() => router.push(category.route as AppRoute)}
                                 >
                                     <View style={styles.categoryContent}>
                                         <View>
