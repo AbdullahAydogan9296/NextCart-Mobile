@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Pressable } from 'react-native';
-import { router } from 'expo-router';
+import { StyleSheet, View, Alert, Pressable } from 'react-native';
+import { Link, router } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { useAuth } from '@/hooks/useAuth';
 import { ROUTES } from './routes';
 
 export default function RegisterScreen() {
@@ -15,13 +16,38 @@ export default function RegisterScreen() {
 
     const backgroundColor = useThemeColor('background', {});
     const tintColor = useThemeColor('tint', {});
+    const { register } = useAuth();
 
-    const handleRegister = () => {
+    const handleRegister = async () => {
+        if (!email || !password || !passwordAgain) {
+            Alert.alert('Hata', 'Lütfen tüm alanları doldurun.');
+            return;
+        }
+
+        if (password.length < 6) {
+            Alert.alert('Hata', 'Şifre en az 6 karakter olmalıdır.');
+            return;
+        }
+
+        if (password !== passwordAgain) {
+            Alert.alert('Hata', 'Şifreler eşleşmiyor.');
+            return;
+        }
+
+        if (!email.includes('@')) {
+            Alert.alert('Hata', 'Geçerli bir email adresi girin.');
+            return;
+        }
+
         setLoading(true);
-        // TODO: Implement register logic
-        setTimeout(() => {
-            setLoading(false);
-        }, 2000);
+        const result = await register(email, password);
+        setLoading(false);
+
+        if (result.success) {
+            router.replace(ROUTES.HOME);
+        } else {
+            Alert.alert('Hata', 'Kayıt olunamadı. ' + (result.error || 'Lütfen bilgilerinizi kontrol edin.'));
+        }
     };
 
     const handleLoginPress = () => {

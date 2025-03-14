@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Link } from 'expo-router';
+import { StyleSheet, View, Alert } from 'react-native';
+import { Link, router } from 'expo-router';
 import { ThemedText } from '@/components/ThemedText';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { useAuth } from '@/hooks/useAuth';
 import { ROUTES } from './routes';
 
 export default function LoginScreen() {
@@ -14,13 +15,23 @@ export default function LoginScreen() {
 
     const backgroundColor = useThemeColor('background', {});
     const tintColor = useThemeColor('tint', {});
+    const { login } = useAuth();
 
-    const handleLogin = () => {
+    const handleLogin = async () => {
+        if (!email || !password) {
+            Alert.alert('Hata', 'Lütfen email ve şifrenizi girin.');
+            return;
+        }
+
         setLoading(true);
-        // TODO: Implement login logic
-        setTimeout(() => {
-            setLoading(false);
-        }, 2000);
+        const result = await login(email, password);
+        setLoading(false);
+
+        if (result.success) {
+            router.replace(ROUTES.HOME);
+        } else {
+            Alert.alert('Hata', 'Giriş yapılamadı. Lütfen bilgilerinizi kontrol edin.');
+        }
     };
 
     return (
@@ -31,7 +42,7 @@ export default function LoginScreen() {
                 <View style={styles.form}>
                     <Input
                         label="Email"
-                        placeholder="example@example.com"
+                        placeholder="Enter your email"
                         value={email}
                         onChangeText={setEmail}
                         keyboardType="email-address"
