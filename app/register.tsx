@@ -19,11 +19,6 @@ export default function RegisterScreen() {
     const { register } = useAuth();
 
     const handleRegister = async () => {
-        if (!email || !password || !passwordAgain) {
-            Alert.alert('Hata', 'Lütfen tüm alanları doldurun.');
-            return;
-        }
-
         if (password.length < 6) {
             Alert.alert('Hata', 'Şifre en az 6 karakter olmalıdır.');
             return;
@@ -35,18 +30,18 @@ export default function RegisterScreen() {
         }
 
         if (!email.includes('@')) {
-            Alert.alert('Hata', 'Geçerli bir email adresi girin.');
+            Alert.alert('Hata', 'Geçerli bir email adresi giriniz.');
             return;
         }
 
-        setLoading(true);
-        const result = await register(email, password);
-        setLoading(false);
-
-        if (result.success) {
-            router.replace(ROUTES.HOME);
-        } else {
-            Alert.alert('Hata', 'Kayıt olunamadı. ' + (result.error || 'Lütfen bilgilerinizi kontrol edin.'));
+        try {
+            setLoading(true);
+            await register(email, password);
+            router.replace('/home');
+        } catch (error: any) {
+            Alert.alert('Hata', 'Kayıt olunamadı. ' + error.message);
+        } finally {
+            setLoading(false);
         }
     };
 

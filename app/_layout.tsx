@@ -29,10 +29,19 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{
-        headerShown: false,
-        animation: 'slide_from_right',
-      }}>
+      <Stack
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: '#111827',
+          },
+          headerShadowVisible: false,
+          contentStyle: {
+            backgroundColor: '#fff',
+          },
+          statusBarStyle: 'light',
+          statusBarTranslucent: true,
+        }}
+      >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
           name="login"
@@ -43,7 +52,7 @@ export default function RootLayout() {
         <Stack.Screen name="register" />
         <Stack.Screen name="+not-found" />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style="light" />
     </ThemeProvider>
   );
 }

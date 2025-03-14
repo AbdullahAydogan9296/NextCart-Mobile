@@ -23,14 +23,14 @@ export default function LoginScreen() {
             return;
         }
 
-        setLoading(true);
-        const result = await login(email, password);
-        setLoading(false);
-
-        if (result.success) {
-            router.replace(ROUTES.HOME);
-        } else {
-            Alert.alert('Hata', 'Giriş yapılamadı. Lütfen bilgilerinizi kontrol edin.');
+        try {
+            setLoading(true);
+            await login(email, password);
+            router.replace('/home');
+        } catch (error: any) {
+            Alert.alert('Hata', 'Giriş yapılamadı. ' + error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
