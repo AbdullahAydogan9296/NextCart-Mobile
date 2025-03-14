@@ -1,7 +1,15 @@
-import React from 'react';
-import { StyleSheet, View, Text, Image, ScrollView, TextInput, TouchableOpacity, Dimensions, SafeAreaView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, View, Text, Image, ScrollView, TextInput, TouchableOpacity, Dimensions, SafeAreaView, ActivityIndicator } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import PaginationDots from './components/PaginationDots';
+import {
+    useFonts,
+    Poppins_400Regular as PoppinsRegular,
+    Poppins_500Medium as PoppinsMedium,
+    Poppins_600SemiBold as PoppinsSemiBold,
+    Poppins_700Bold as PoppinsBold,
+} from '@expo-google-fonts/poppins';
 
 // Import SVG components
 import MenuIcon from '../assets/images/menu.svg';
@@ -10,9 +18,84 @@ import DeliveryIcon from '../assets/images/delivery.svg';
 import DeliveryWorldIcon from '../assets/images/delivery-world.svg';
 import RefundIcon from '../assets/images/refund.svg';
 
+// Import types and API
+import { Product } from './types/product';
+import { api } from './services/api';
+
 const { width } = Dimensions.get('window');
 
 export default function Home() {
+    const [recommendedProducts, setRecommendedProducts] = useState<Product[]>([]);
+    const [bestSellers, setBestSellers] = useState<Product[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [currentCategory, setCurrentCategory] = useState(0);
+    const [currentRecommendation, setCurrentRecommendation] = useState(0);
+    const [currentBestSeller, setCurrentBestSeller] = useState(0);
+
+    const [fontsLoaded] = useFonts({
+        PoppinsRegular,
+        PoppinsMedium,
+        PoppinsSemiBold,
+        PoppinsBold,
+    });
+
+    useEffect(() => {
+        fetchProducts();
+    }, []);
+
+    const fetchProducts = async () => {
+        try {
+            // Fetch smartphones for recommendations
+            const smartphones = await api.getProductsByCategory('smartphones');
+            setRecommendedProducts(smartphones.products);
+
+            // Fetch laptops for best sellers
+            const laptops = await api.getProductsByCategory('laptops');
+            setBestSellers(laptops.products);
+        } catch (error) {
+            console.error('Error fetching products:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (!fontsLoaded) {
+        return <ActivityIndicator size="large" color="#111827" />;
+    }
+
+    const categories = [
+        { title: "For Men's", price: "Starting at $24", color: '#E3F2FF' },
+        { title: "Women's Fashion", price: "Starting at $24", color: '#FFE8F7' },
+        { title: "Electronics", price: "Starting at $24", color: '#FFF3E5' },
+        { title: "Cosmetics", price: "Starting at $24", color: '#E5FFE8' },
+    ];
+
+    const handleScroll = (event: any, setter: (index: number) => void, itemWidth: number) => {
+        const contentOffset = event.nativeEvent.contentOffset.x;
+        const index = Math.round(contentOffset / itemWidth);
+        setter(index);
+    };
+
+    const renderProductCard = (product: Product) => (
+        <TouchableOpacity key={product.id} style={styles.productCard}>
+            <View style={styles.productImageContainer}>
+                <Image
+                    source={{ uri: product.thumbnail }}
+                    style={styles.productImage}
+                    resizeMode="cover"
+                />
+            </View>
+            <View style={styles.productInfo}>
+                <Text style={styles.productName} numberOfLines={1}>{product.title}</Text>
+                <Text style={styles.productPrice}>${product.price}</Text>
+                <View style={styles.ratingContainer}>
+                    <Text style={styles.rating}>★ {product.rating.toFixed(1)}</Text>
+                    <Text style={styles.ratingCount}>({Math.floor(Math.random() * 500)})</Text>
+                </View>
+            </View>
+        </TouchableOpacity>
+    );
+
     return (
         <SafeAreaView style={styles.safeArea}>
             <ScrollView style={styles.container}>
@@ -20,36 +103,6 @@ export default function Home() {
                 <Stack.Screen
                     options={{
                         headerShown: true,
-                        headerStyle: {
-                            backgroundColor: '#111827',
-                        },
-                        headerShadowVisible: false,
-                        headerLeft: () => (
-                            <TouchableOpacity style={styles.headerButton}>
-                                <Image
-                                    source={require('../assets/images/logo.png')}
-                                    style={styles.logo}
-                                />
-                            </TouchableOpacity>
-                        ),
-                        headerTitle: () => (
-                            <View style={styles.searchBox}>
-                                <Image
-                                    source={require('../assets/images/search.png')}
-                                    style={styles.searchIcon}
-                                />
-                                <TextInput
-                                    placeholder="Search in products..."
-                                    placeholderTextColor="#6B7280"
-                                    style={styles.searchInput}
-                                />
-                            </View>
-                        ),
-                        headerRight: () => (
-                            <TouchableOpacity style={styles.headerButton}>
-                                <MenuIcon width="24" height="24" color="#fff" />
-                            </TouchableOpacity>
-                        ),
                     }}
                 />
 
@@ -66,21 +119,21 @@ export default function Home() {
                 <View style={styles.features}>
                     <View style={styles.featureRow}>
                         <View style={styles.featureItem}>
-                            <ShippingIcon width="24" height="24" style={styles.featureIcon} />
+                            <ShippingIcon width={width * 0.06} height={width * 0.06} style={styles.featureIcon} />
                             <Text style={styles.featureText}>Free shipping</Text>
                         </View>
                         <View style={styles.featureItem}>
-                            <DeliveryIcon width="24" height="24" style={styles.featureIcon} />
+                            <DeliveryIcon width={width * 0.06} height={width * 0.06} style={styles.featureIcon} />
                             <Text style={styles.featureText}>Very easy to return</Text>
                         </View>
                     </View>
                     <View style={styles.featureRow}>
                         <View style={styles.featureItem}>
-                            <DeliveryWorldIcon width="24" height="24" style={styles.featureIcon} />
+                            <DeliveryWorldIcon width={width * 0.06} height={width * 0.06} style={styles.featureIcon} />
                             <Text style={styles.featureText}>Worldwide delivery</Text>
                         </View>
                         <View style={styles.featureItem}>
-                            <RefundIcon width="24" height="24" style={styles.featureIcon} />
+                            <RefundIcon width={width * 0.06} height={width * 0.06} style={styles.featureIcon} />
                             <Text style={styles.featureText}>Refunds policy</Text>
                         </View>
                     </View>
@@ -89,99 +142,92 @@ export default function Home() {
                 {/* Start Exploring Section */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Start exploring</Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        <TouchableOpacity style={[styles.categoryCard, { backgroundColor: '#E3F2FF' }]}>
-                            <View style={styles.categoryContent}>
-                                <View>
-                                    <Text style={styles.categoryTitle}>For Men's</Text>
-                                    <Text style={styles.categoryPrice}>Starting at $24</Text>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        pagingEnabled
+                        onScroll={(e) => handleScroll(e, setCurrentCategory, width)}
+                        scrollEventThrottle={16}
+                        decelerationRate="fast"
+                        snapToInterval={width}
+                        contentContainerStyle={styles.categoryContainer}
+                    >
+                        {categories.map((category, index) => (
+                            <TouchableOpacity
+                                key={index}
+                                style={[
+                                    styles.categoryCard,
+                                    { backgroundColor: category.color, width: width * 0.85 }
+                                ]}
+                            >
+                                <View style={styles.categoryContent}>
+                                    <View>
+                                        <Text style={styles.categoryTitle}>{category.title}</Text>
+                                        <Text style={styles.categoryPrice}>{category.price}</Text>
+                                    </View>
+                                    <View style={styles.shopNowContainer}>
+                                        <Text style={styles.shopNowText}>SHOP NOW</Text>
+                                        <Text style={styles.shopNowArrow}>→</Text>
+                                    </View>
                                 </View>
-                                <View style={styles.shopNowContainer}>
-                                    <Text style={styles.shopNowText}>SHOP NOW</Text>
-                                    <Text style={styles.shopNowArrow}>→</Text>
-                                </View>
-                            </View>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity style={[styles.categoryCard, { backgroundColor: '#FFE8F7' }]}>
-                            <View style={styles.categoryContent}>
-                                <View>
-                                    <Text style={styles.categoryTitle}>Women's Fashion</Text>
-                                    <Text style={styles.categoryPrice}>Starting at $24</Text>
-                                </View>
-                                <View style={styles.shopNowContainer}>
-                                    <Text style={styles.shopNowText}>SHOP NOW</Text>
-                                    <Text style={styles.shopNowArrow}>→</Text>
-                                </View>
-                            </View>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity style={[styles.categoryCard, { backgroundColor: '#FFF3E5' }]}>
-                            <View style={styles.categoryContent}>
-                                <View>
-                                    <Text style={styles.categoryTitle}>Electronics</Text>
-                                    <Text style={styles.categoryPrice}>Starting at $24</Text>
-                                </View>
-                                <View style={styles.shopNowContainer}>
-                                    <Text style={styles.shopNowText}>SHOP NOW</Text>
-                                    <Text style={styles.shopNowArrow}>→</Text>
-                                </View>
-                            </View>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity style={[styles.categoryCard, { backgroundColor: '#E5FFE8' }]}>
-                            <View style={styles.categoryContent}>
-                                <View>
-                                    <Text style={styles.categoryTitle}>Cosmetics</Text>
-                                    <Text style={styles.categoryPrice}>Starting at $24</Text>
-                                </View>
-                                <View style={styles.shopNowContainer}>
-                                    <Text style={styles.shopNowText}>SHOP NOW</Text>
-                                    <Text style={styles.shopNowArrow}>→</Text>
-                                </View>
-                            </View>
-                        </TouchableOpacity>
+                            </TouchableOpacity>
+                        ))}
                     </ScrollView>
+                    <PaginationDots total={categories.length} current={currentCategory} />
                 </View>
 
                 {/* Recommendations Section */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Recommendations</Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        <TouchableOpacity style={styles.productCard}>
-                            <View style={styles.productImageContainer}>
-                                <View style={styles.productImagePlaceholder} />
-                            </View>
-                            <View style={styles.productInfo}>
-                                <Text style={styles.productName}>Product Name</Text>
-                                <Text style={styles.productPrice}>$XX.XX</Text>
-                                <View style={styles.ratingContainer}>
-                                    <Text style={styles.rating}>★ X.X</Text>
-                                    <Text style={styles.ratingCount}>(XXX)</Text>
-                                </View>
-                            </View>
-                        </TouchableOpacity>
-                    </ScrollView>
+                    {loading ? (
+                        <ActivityIndicator size="large" color="#111827" />
+                    ) : (
+                        <>
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                pagingEnabled
+                                onScroll={(e) => handleScroll(e, setCurrentRecommendation, width)}
+                                scrollEventThrottle={16}
+                                decelerationRate="fast"
+                                snapToInterval={width}
+                                contentContainerStyle={styles.productContainer}
+                            >
+                                {recommendedProducts.map(renderProductCard)}
+                            </ScrollView>
+                            <PaginationDots
+                                total={recommendedProducts.length}
+                                current={currentRecommendation}
+                            />
+                        </>
+                    )}
                 </View>
 
                 {/* Best Sellers Section */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Best Sellers</Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        <TouchableOpacity style={styles.productCard}>
-                            <View style={styles.productImageContainer}>
-                                <View style={styles.productImagePlaceholder} />
-                            </View>
-                            <View style={styles.productInfo}>
-                                <Text style={styles.productName}>Product Name</Text>
-                                <Text style={styles.productPrice}>$XX.XX</Text>
-                                <View style={styles.ratingContainer}>
-                                    <Text style={styles.rating}>★ X.X</Text>
-                                    <Text style={styles.ratingCount}>(XXX)</Text>
-                                </View>
-                            </View>
-                        </TouchableOpacity>
-                    </ScrollView>
+                    {loading ? (
+                        <ActivityIndicator size="large" color="#111827" />
+                    ) : (
+                        <>
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                pagingEnabled
+                                onScroll={(e) => handleScroll(e, setCurrentBestSeller, width)}
+                                scrollEventThrottle={16}
+                                decelerationRate="fast"
+                                snapToInterval={width}
+                                contentContainerStyle={styles.productContainer}
+                            >
+                                {bestSellers.map(renderProductCard)}
+                            </ScrollView>
+                            <PaginationDots
+                                total={bestSellers.length}
+                                current={currentBestSeller}
+                            />
+                        </>
+                    )}
                 </View>
             </ScrollView>
         </SafeAreaView>
@@ -198,11 +244,11 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
     },
     headerButton: {
-        padding: 12,
+        padding: width * 0.03,
     },
     logo: {
-        width: 32,
-        height: 32,
+        width: width * 0.08,
+        height: width * 0.08,
         resizeMode: 'contain',
     },
     searchBox: {
@@ -210,50 +256,51 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#fff',
         borderRadius: 100,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
+        paddingHorizontal: width * 0.03,
+        paddingVertical: width * 0.015,
         width: width * 0.6,
     },
     searchIcon: {
-        width: 16,
-        height: 16,
-        marginRight: 8,
+        width: width * 0.04,
+        height: width * 0.04,
+        marginRight: width * 0.02,
         tintColor: '#6B7280',
     },
     searchInput: {
         flex: 1,
-        fontSize: 14,
+        fontSize: width * 0.035,
         color: '#1B1E28',
         padding: 0,
     },
     heroSection: {
-        padding: 20,
+        padding: width * 0.05,
     },
     heroPrice: {
-        fontSize: 16,
+        fontSize: width * 0.04,
         color: '#666',
+        fontWeight: '400',
     },
     heroTitle: {
-        fontSize: 32,
+        fontSize: width * 0.08,
         fontWeight: 'bold',
-        marginTop: 10,
-        marginBottom: 20,
+        marginTop: width * 0.025,
+        marginBottom: width * 0.05,
     },
     exploreButton: {
         backgroundColor: '#111827',
-        padding: 15,
-        borderRadius: 25,
+        padding: width * 0.0375,
+        borderRadius: width * 0.0625,
         alignItems: 'center',
-        width: 150,
+        width: width * 0.375,
     },
     exploreButtonText: {
         color: '#fff',
-        fontSize: 16,
+        fontSize: width * 0.04,
         fontWeight: '600',
     },
     features: {
-        padding: 20,
-        gap: 20,
+        padding: width * 0.05,
+        gap: width * 0.05,
     },
     featureRow: {
         flexDirection: 'row',
@@ -262,46 +309,51 @@ const styles = StyleSheet.create({
     featureItem: {
         flex: 1,
         alignItems: 'center',
-        padding: 16,
-        marginHorizontal: 8,
+        padding: width * 0.04,
+        marginHorizontal: width * 0.02,
     },
     featureIcon: {
-        marginBottom: 8,
+        marginBottom: width * 0.02,
     },
     featureText: {
-        fontSize: 12,
+        fontSize: width * 0.03,
         color: '#666',
         textAlign: 'center',
+        fontWeight: '400',
     },
     section: {
-        padding: 20,
+        padding: width * 0.05,
     },
     sectionTitle: {
-        fontSize: 20,
+        fontSize: width * 0.05,
         fontWeight: 'bold',
-        marginBottom: 15,
+        marginBottom: width * 0.0375,
+    },
+    categoryContainer: {
+        paddingHorizontal: width * 0.075,
     },
     categoryCard: {
-        borderRadius: 15,
-        width: width * 0.7,
-        height: 120,
-        marginRight: 15,
+        borderRadius: width * 0.0375,
+        height: width * 0.3,
+        marginRight: width * 0.075,
         overflow: 'hidden',
+        paddingHorizontal: '5%',
     },
     categoryContent: {
-        padding: 20,
+        padding: '5%',
         flex: 1,
         justifyContent: 'space-between',
     },
     categoryTitle: {
-        fontSize: 24,
+        fontSize: width * 0.06,
         fontWeight: '600',
         color: '#111827',
-        marginBottom: 4,
+        marginBottom: '2%',
     },
     categoryPrice: {
-        fontSize: 16,
+        fontSize: width * 0.04,
         color: '#666',
+        fontWeight: '400',
     },
     shopNowContainer: {
         flexDirection: 'row',
@@ -309,53 +361,58 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
     },
     shopNowText: {
-        fontSize: 14,
+        fontSize: width * 0.035,
         fontWeight: '600',
         color: '#111827',
-        marginRight: 8,
+        marginRight: width * 0.02,
     },
     shopNowArrow: {
-        fontSize: 20,
+        fontSize: width * 0.05,
         color: '#111827',
     },
+    productContainer: {
+        paddingHorizontal: width * 0.075,
+    },
     productCard: {
-        width: 200,
-        marginRight: 15,
+        width: width * 0.85,
+        marginRight: width * 0.075,
     },
     productImageContainer: {
         width: '100%',
         aspectRatio: 1,
-        borderRadius: 15,
+        borderRadius: width * 0.0375,
         overflow: 'hidden',
     },
-    productImagePlaceholder: {
+    productImage: {
         width: '100%',
         height: '100%',
-        backgroundColor: '#F5F5F5',
     },
     productInfo: {
-        marginTop: 10,
+        marginTop: width * 0.025,
     },
     productName: {
-        fontSize: 16,
+        fontSize: width * 0.04,
         fontWeight: '500',
     },
     productPrice: {
-        fontSize: 18,
+        fontSize: width * 0.045,
         fontWeight: 'bold',
-        marginTop: 5,
+        marginTop: width * 0.0125,
     },
     ratingContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: 5,
+        marginTop: width * 0.0125,
     },
     rating: {
         color: '#FFD700',
-        marginRight: 5,
+        marginRight: width * 0.0125,
+        fontSize: width * 0.04,
+        fontWeight: '400',
     },
     ratingCount: {
         color: '#666',
-        fontSize: 12,
+        fontSize: width * 0.03,
+        fontWeight: '400',
     },
 }); 
