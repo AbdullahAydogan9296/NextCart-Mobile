@@ -151,26 +151,28 @@ export default function Home() {
                         decelerationRate="fast"
                         snapToInterval={width}
                         contentContainerStyle={styles.categoryContainer}
+                        style={styles.categoryScrollView}
                     >
                         {categories.map((category, index) => (
-                            <TouchableOpacity
-                                key={index}
-                                style={[
-                                    styles.categoryCard,
-                                    { backgroundColor: category.color, width: width * 0.85 }
-                                ]}
-                            >
-                                <View style={styles.categoryContent}>
-                                    <View>
-                                        <Text style={styles.categoryTitle}>{category.title}</Text>
-                                        <Text style={styles.categoryPrice}>{category.price}</Text>
+                            <View key={index} style={styles.categoryWrapper}>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.categoryCard,
+                                        { backgroundColor: category.color }
+                                    ]}
+                                >
+                                    <View style={styles.categoryContent}>
+                                        <View>
+                                            <Text style={styles.categoryTitle}>{category.title}</Text>
+                                            <Text style={styles.categoryPrice}>{category.price}</Text>
+                                        </View>
+                                        <View style={styles.shopNowContainer}>
+                                            <Text style={styles.shopNowText}>SHOP NOW</Text>
+                                            <Text style={styles.shopNowArrow}>→</Text>
+                                        </View>
                                     </View>
-                                    <View style={styles.shopNowContainer}>
-                                        <Text style={styles.shopNowText}>SHOP NOW</Text>
-                                        <Text style={styles.shopNowArrow}>→</Text>
-                                    </View>
-                                </View>
-                            </TouchableOpacity>
+                                </TouchableOpacity>
+                            </View>
                         ))}
                     </ScrollView>
                     <PaginationDots total={categories.length} current={currentCategory} />
@@ -192,8 +194,13 @@ export default function Home() {
                                 decelerationRate="fast"
                                 snapToInterval={width}
                                 contentContainerStyle={styles.productContainer}
+                                style={styles.categoryScrollView}
                             >
-                                {recommendedProducts.map(renderProductCard)}
+                                {recommendedProducts.map((product) => (
+                                    <View key={product.id} style={styles.categoryWrapper}>
+                                        {renderProductCard(product)}
+                                    </View>
+                                ))}
                             </ScrollView>
                             <PaginationDots
                                 total={recommendedProducts.length}
@@ -219,8 +226,13 @@ export default function Home() {
                                 decelerationRate="fast"
                                 snapToInterval={width}
                                 contentContainerStyle={styles.productContainer}
+                                style={styles.categoryScrollView}
                             >
-                                {bestSellers.map(renderProductCard)}
+                                {bestSellers.map((product) => (
+                                    <View key={product.id} style={styles.categoryWrapper}>
+                                        {renderProductCard(product)}
+                                    </View>
+                                ))}
                             </ScrollView>
                             <PaginationDots
                                 total={bestSellers.length}
@@ -329,26 +341,36 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: width * 0.0375,
     },
+    categoryScrollView: {
+        overflow: 'visible',
+    },
     categoryContainer: {
-        paddingHorizontal: width * 0.075,
+        alignItems: 'center',
+    },
+    categoryWrapper: {
+        width: width,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     categoryCard: {
         borderRadius: width * 0.0375,
         height: width * 0.3,
-        marginRight: width * 0.075,
+        width: width * 0.85,
         overflow: 'hidden',
-        paddingHorizontal: '5%',
+        paddingHorizontal: width * 0.05,
     },
     categoryContent: {
-        padding: '5%',
         flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'space-between',
+        paddingVertical: width * 0.05,
     },
     categoryTitle: {
         fontSize: width * 0.06,
         fontWeight: '600',
         color: '#111827',
-        marginBottom: '2%',
+        marginBottom: width * 0.02,
     },
     categoryPrice: {
         fontSize: width * 0.04,
@@ -358,7 +380,6 @@ const styles = StyleSheet.create({
     shopNowContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'flex-end',
     },
     shopNowText: {
         fontSize: width * 0.035,
@@ -371,11 +392,11 @@ const styles = StyleSheet.create({
         color: '#111827',
     },
     productContainer: {
-        paddingHorizontal: width * 0.075,
+        alignItems: 'center',
     },
     productCard: {
         width: width * 0.85,
-        marginRight: width * 0.075,
+        overflow: 'hidden',
     },
     productImageContainer: {
         width: '100%',
